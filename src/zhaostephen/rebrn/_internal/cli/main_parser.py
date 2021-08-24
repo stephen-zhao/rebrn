@@ -10,6 +10,7 @@ class CliMainArgs:
     in_dir_path: Path
     search_pattern: str
     replacement_pattern: str
+    include_all_files: bool
 
 
 def _create_invalid_arguments_msg(
@@ -49,6 +50,7 @@ def _create_argparser(program_name: str) -> argparse.ArgumentParser:
     argparser.add_argument('in_dir', help='The input directory containing the files to be renamed.')
     argparser.add_argument('search_pattern', help='The dfregex expression used to filter filenames and to extract substrings from filenames.')
     argparser.add_argument('replacement_pattern', help='The replacement pattern to generate new file names, using backslash references for sed-style processing.')
+    argparser.add_argument('-a', '--all', action='store_true', help='Match against all files, including directories')
     return argparser
 
 
@@ -75,4 +77,5 @@ def parse_args(program_name: str, args: List[str]) -> CliMainArgs:
         in_dir_path=in_dir_path,
         search_pattern=parsed_args.search_pattern,
         replacement_pattern=parsed_args.replacement_pattern,
-    )
+        include_all_files=parsed_args.all,
+        )
