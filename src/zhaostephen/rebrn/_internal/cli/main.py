@@ -25,7 +25,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     # Get list of files in directory
     pre_rename_files = list(file \
             for file in os.listdir(str(args.in_dir_path)) \
-            if (args.in_dir_path / file).is_file())
+            if args.include_all_files or (args.in_dir_path / file).is_file())
 
     # Create a DatetimeMatcher to match regex with datetime formatting
     dtmatcher = DatetimeMatcher()
