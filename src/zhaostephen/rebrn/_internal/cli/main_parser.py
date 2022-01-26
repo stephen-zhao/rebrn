@@ -13,7 +13,7 @@ class CliMainArgs:
     replacement_pattern: str
 
 
-def _create_invalid_arguments_msg(
+def __create_invalid_arguments_msg(
     argparser: argparse.ArgumentParser,
     argument_dict: Dict[str, str],
     details: Optional[str],
@@ -42,7 +42,7 @@ def _create_invalid_arguments_msg(
     return "\n".join(msg)
 
 
-def _create_argparser(program_name: str) -> argparse.ArgumentParser:
+def __create_argparser(program_name: str) -> argparse.ArgumentParser:
     argparser = argparse.ArgumentParser(
         prog=program_name,
         description="Renames files by substituting a search pattern with a replacement pattern, with datetime formatting and regex support.",
@@ -62,14 +62,14 @@ def _create_argparser(program_name: str) -> argparse.ArgumentParser:
 
 
 def parse_args(program_name: str, args: List[str]) -> CliMainArgs:
-    argparser = _create_argparser(program_name)
+    argparser = __create_argparser(program_name)
     parsed_args = argparser.parse_args(args)
 
     # Validate directory
     in_dir_path = Path(parsed_args.in_dir)
     if in_dir_path.is_file():
         raise CliInvalidArgumentError(
-            _create_invalid_arguments_msg(
+            __create_invalid_arguments_msg(
                 argparser,
                 {"in_dir": parsed_args.in_dir},
                 "Input directory cannot be a file.",
@@ -77,7 +77,7 @@ def parse_args(program_name: str, args: List[str]) -> CliMainArgs:
         )
     if not in_dir_path.is_dir():
         raise CliInvalidArgumentError(
-            _create_invalid_arguments_msg(
+            __create_invalid_arguments_msg(
                 argparser,
                 {"in_dir": parsed_args.in_dir},
                 "Input directory is not a valid directory.",

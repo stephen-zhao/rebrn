@@ -91,7 +91,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 str(args.in_dir_path / filename),
                 str(args.in_dir_path / files_oldtonew[filename]),
             )
-        except:
+        except Exception:
             print("An error occurred when trying to rename {}".format(filename))
 
     print("Rename done.")
