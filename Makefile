@@ -179,7 +179,7 @@ black-fix: $(MARKER_REQUIREMENTS_SYNCED_DEVTIME)
 .PHONY: mypy
 mypy: # Run mypy type-checker
 mypy: $(MARKER_REQUIREMENTS_SYNCED_DEVTIME)
-	$(PY_IN_VENV_EXE) -m mypy --config-file setup.cfg $(package_dir)
+	$(PY_IN_VENV_EXE) -m mypy --config-file setup.cfg --namespace-packages -p $(package)
 
 
 # ==================== Building ====================
