@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from zhaostephen.rebrn import __version__ as VERSION
 from zhaostephen.rebrn._internal.exceptions import CliInvalidArgumentError
 
 
@@ -57,6 +58,9 @@ def __create_argparser(program_name: str) -> argparse.ArgumentParser:
     argparser.add_argument(
         "replacement_pattern",
         help="The replacement pattern to generate new file names, using backslash references for sed-style processing.",
+    )
+    argparser.add_argument(
+        "-v", "--version", action="version", version="%(prog)s v" + str(VERSION)
     )
     return argparser
 
