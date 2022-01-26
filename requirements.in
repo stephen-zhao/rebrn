@@ -1,1 +1,1 @@
-datetime-matcher
+git+ssh://git@github.com/stephen-zhao/datetime_matcher@1d4696decaa8e45bd80fc7e6b95510d03d107c70#egg=datetime-matcher
