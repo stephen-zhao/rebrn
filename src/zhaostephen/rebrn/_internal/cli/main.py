@@ -13,7 +13,7 @@ PROGRAM_NAME = "rebrn"
 
 def main(argv: Optional[List[str]] = None) -> int:
     program_name = (
-        PROGRAM_NAME if os.path.basename(sys.argv[0]) == "__main__.py" else None
+        PROGRAM_NAME if os.path.basename(sys.argv[0]) == "__main__.py" else "rebrn"
     )
     if argv is None:
         argv = sys.argv[1:]
