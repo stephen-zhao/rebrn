@@ -1,4 +1,4 @@
-PY_EXE_PATH ?= $(shell which python3.10 || which python3.9 || which python3.8 || which python3.7 || which python3.6 || which python3)
+PY_EXE_PATH ?= $(shell which python3.13 || which python3.12 || which python3.11 || which python3.10 || which python3.9 || which python3.8 || which python3.7 || which python3.6 || which python3)
 PY_EXE := $(shell basename $(PY_EXE_PATH))
 
 VENV_DIR := .venv
