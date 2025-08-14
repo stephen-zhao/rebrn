@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List, Optional
+from typing import Optional
 
 from datetime_matcher import DatetimeMatcher
 
@@ -11,7 +11,7 @@ from zhaostephen.rebrn._internal.table_printer import print_table_by_columns
 PROGRAM_NAME = "rebrn"
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: Optional[list[str]] = None) -> int:
     program_name = (
         PROGRAM_NAME if os.path.basename(sys.argv[0]) == "__main__.py" else "rebrn"
     )

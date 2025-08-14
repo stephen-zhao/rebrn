@@ -1,9 +1,9 @@
 import argparse
 from dataclasses import dataclass
+import importlib
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
-from zhaostephen.rebrn import __version__ as VERSION
 from zhaostephen.rebrn._internal.exceptions import CliInvalidArgumentError
 
 
@@ -16,7 +16,7 @@ class CliMainArgs:
 
 def __create_invalid_arguments_msg(
     argparser: argparse.ArgumentParser,
-    argument_dict: Dict[str, str],
+    argument_dict: dict[str, str],
     details: Optional[str],
 ) -> str:
     msg = []
@@ -60,12 +60,15 @@ def __create_argparser(program_name: str) -> argparse.ArgumentParser:
         help="The replacement pattern to generate new file names, using backslash references for sed-style processing.",
     )
     argparser.add_argument(
-        "-v", "--version", action="version", version="%(prog)s v" + str(VERSION)
+        "-v",
+        "--version",
+        action="version",
+        version="%(prog)s v" + importlib.metadata.version("zhaostephen.rebrn"),
     )
     return argparser
 
 
-def parse_args(program_name: str, args: List[str]) -> CliMainArgs:
+def parse_args(program_name: str, args: list[str]) -> CliMainArgs:
     argparser = __create_argparser(program_name)
     parsed_args = argparser.parse_args(args)
 
