@@ -53,7 +53,7 @@ Homepage = "https://github.com/stephen-zhao/rebrn"
 Source = "https://github.com/stephen-zhao/rebrn"
 
 [project.scripts]
-vdts = "zhaostephen.rebrn._internal.cli.main:main"
+rebrn = "zhaostephen.rebrn._internal.cli.main:main"
 
 [build-system]
 requires = ["setuptools >= 77.0.3", "wheel"]
