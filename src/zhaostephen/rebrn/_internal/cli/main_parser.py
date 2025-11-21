@@ -1,6 +1,6 @@
 import argparse
 from dataclasses import dataclass
-import importlib
+import importlib.metadata
 from pathlib import Path
 from typing import Optional
 
