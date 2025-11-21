@@ -1,6 +1,129 @@
-[build-system]
-requires = [
-  "setuptools>=42",
-  "wheel"
+[project]
+name = "zhaostephen-rebrn"
+version = "0.1.2"
+description = "A CLI for bulk renaming files using dfregex search and replace."
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.12"
+dependencies = [
+    "datetime-matcher>=0.2.1",
 ]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Programming Language :: Python :: 3",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Utilities",
+]
+keywords = [
+    "rename",
+    "file",
+    "bulk rename",
+    "pattern match rename",
+    "renaming",
+    "files",
+    "regex",
+    "regular expression",
+    "datetime",
+    "date",
+    "time",
+    "format",
+    "reformat",
+    "extract",
+    "strftime",
+    "strptime",
+    "parse",
+    "format code",
+    "search",
+    "find",
+    "replace",
+]
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Stephen Zhao", email = "mail@zhaostephen.com" },
+]
+
+[project.urls]
+Homepage = "https://github.com/stephen-zhao/rebrn"
+Source = "https://github.com/stephen-zhao/rebrn"
+
+[project.scripts]
+rebrn = "zhaostephen.rebrn._internal.cli.main:main"
+
+[build-system]
+requires = ["setuptools >= 77.0.3", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["zhaostephen.*"]
+
+[tool.uv]
+dev-dependencies = [
+    "bump-my-version>=1.2.1",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.0.0",
+]
+
+[tool.bumpversion]
+current_version = "0.2.0"
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
+serialize = ["{major}.{minor}.{patch}"]
+search = "{current_version}"
+replace = "{new_version}"
+regex = false
+ignore_missing_version = false
+ignore_missing_files = false
+tag = true
+sign_tags = false
+tag_name = "v{new_version}"
+tag_message = "Bump version: {current_version} → {new_version}"
+allow_dirty = false
+commit = true
+message = "Bump version: {current_version} → {new_version}"
+moveable_tags = []
+commit_args = ""
+setup_hooks = []
+pre_commit_hooks = []
+post_commit_hooks = []
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 100
+
+[tool.flake8]
+ignore = "W503,E203,B950,E501,C81,WPS210,WPS213,WPS305,WPS337,WPS348"
+min-name-length = 3
+max-try-body-length = 2
+max-complexity = 18
+select = "B,C,E,F,N400,N8,W,T4"
+exclude = "test, .venv, build, docs"
+per-file-ignores = "**/__init__.py:F401"
+    
+[tool.mypy]
+warn_redundant_casts = true
+warn_return_any = true
+warn_unused_ignores = true
+warn_unused_configs = true
+no_implicit_optional = true
+
+[tool.pytest.ini_options]
+addopts = "--cov=zhaostephen.rebrn --cov-report=term-missing"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.coverage.run]
+branch = true
+omit = ["tests/*"]

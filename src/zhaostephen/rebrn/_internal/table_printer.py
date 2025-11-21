@@ -1,7 +1,4 @@
-from typing import List
-
-
-def format_table_by_columns(input_table_columns: List[List[str]]) -> str:
+def format_table_by_columns(input_table_columns: list[list[str]]) -> str:
     column_widths = list(
         max(len(item) for item in column) for column in input_table_columns
     )
@@ -19,5 +16,5 @@ def format_table_by_columns(input_table_columns: List[List[str]]) -> str:
     return "\n".join(" ".join(row) for row in rows)
 
 
-def print_table_by_columns(input_table_columns: List[List[str]]) -> None:
+def print_table_by_columns(input_table_columns: list[list[str]]) -> None:
     print(format_table_by_columns(input_table_columns))
