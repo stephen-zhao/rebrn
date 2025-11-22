@@ -33,10 +33,59 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Check PR labels first (priority: labels > commit messages)
-          # We search for the PR associated with the current commit
-          # The safe navigation operator (.?) ensures we don't fail if no PR is found
-          PR_LABELS=$(gh pr list --search "${{ github.sha }}" --state merged --json labels --jq '.[0]?.labels[]?.name')
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+
+          # Initialize PR_LABELS
+          PR_LABELS=""
+
+          # Try to extract PR number from commit message (e.g., "Merge pull request #123..." or "... (#123)")
+          # This regex looks for (#123) at the end of the subject line or in the body
+          PR_NUMBER=$(echo "$COMMIT_MSG" | grep -oP '\(#\K\d+(?=\))' | head -n 1)
+          
+          if [ -n "$PR_NUMBER" ]; then
+            echo "Found PR number in commit message: #$PR_NUMBER"
+            # Fetch labels and mergedAt timestamp
+            PR_DATA=$(gh pr view "$PR_NUMBER" --json labels,mergedAt 2>/dev/null || true)
+            
+            if [ -n "$PR_DATA" ]; then
+              PR_MERGED_AT=$(echo "$PR_DATA" | jq -r '.mergedAt')
+              
+              if [ -n "$PR_MERGED_AT" ] && [ "$PR_MERGED_AT" != "null" ]; then
+                # Get commit timestamp in seconds
+                COMMIT_TS=$(git show -s --format=%ct HEAD)
+                # Get PR merged timestamp in seconds (using date -d which works on ubuntu-latest)
+                PR_TS=$(date -d "$PR_MERGED_AT" +%s)
+                
+                # Calculate absolute difference
+                DIFF=$((COMMIT_TS - PR_TS))
+                if [ $DIFF -lt 0 ]; then DIFF=$(( -1 * DIFF )); fi
+                
+                echo "PR Merged At: $PR_MERGED_AT ($PR_TS)"
+                echo "Commit Time: $(date -d @$COMMIT_TS) ($COMMIT_TS)"
+                echo "Time difference: ${DIFF}s"
+                
+                # If difference is less than 1 hour (3600 seconds), accept the PR
+                if [ $DIFF -lt 3600 ]; then
+                   PR_LABELS=$(echo "$PR_DATA" | jq -r '.labels[]?.name')
+                else
+                   echo "Time difference too large (>1h), ignoring PR #$PR_NUMBER (likely a false positive reference)"
+                   PR_LABELS=""
+                fi
+              else
+                 echo "PR #$PR_NUMBER has no mergedAt timestamp (might be open or closed without merge)"
+              fi
+            else
+              echo "Could not fetch data for PR #$PR_NUMBER (might be an issue or invalid number)"
+            fi
+          fi
+
+          # Fallback: Search by SHA if no PR number found or verification failed
+          if [ -z "$PR_LABELS" ]; then
+            echo "No valid PR labels found via number, searching by SHA..."
+            PR_LABELS=$(gh pr list --search "${{ github.sha }}" --state merged --json labels --jq '.[0]?.labels[]?.name')
+          fi
+          
           echo "PR Labels found: $PR_LABELS"
 
           if echo "$PR_LABELS" | grep -q "bumpversion=major"; then
