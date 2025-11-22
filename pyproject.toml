@@ -1,6 +1,6 @@
 [project]
 name = "zhaostephen-rebrn"
-version = "0.2.1"
+version = "0.2.2"
 description = "A CLI for bulk renaming files using dfregex search and replace."
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.12"
@@ -74,7 +74,7 @@ dev-dependencies = [
 ]
 
 [tool.bumpversion]
-current_version = "0.2.1"
+current_version = "0.2.2"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"
