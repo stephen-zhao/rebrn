@@ -7,7 +7,7 @@ on:
 
 jobs:
   bump-version:
-    if: "!startsWith(github.event.head_commit.message, 'Bump version:')"
+    if: ${{ !startsWith(github.event.head_commit.message, 'Bump version:') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
