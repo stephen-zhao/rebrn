@@ -1,0 +1,54 @@
+name: Bump Version
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bump-version:
+    if: "!startsWith(github.event.head_commit.message, 'Bump version:')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine Bump Part
+        id: bump_part
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+          
+          if echo "$COMMIT_MSG" | grep -q "#major"; then
+            echo "part=major" >> $GITHUB_OUTPUT
+            echo "Detected #major"
+          elif echo "$COMMIT_MSG" | grep -q "#minor"; then
+            echo "part=minor" >> $GITHUB_OUTPUT
+            echo "Detected #minor"
+          elif echo "$COMMIT_MSG" | grep -q "#patch"; then
+            echo "part=patch" >> $GITHUB_OUTPUT
+            echo "Detected #patch"
+          else
+            echo "part=patch" >> $GITHUB_OUTPUT
+            echo "No tag detected, defaulting to patch"
+          fi
+
+      - name: Bump Version
+        run: |
+          make bump-version PART=${{ steps.bump_part.outputs.part }}
+          git push origin main --tags
