@@ -38,10 +38,16 @@ jobs:
 
           # Initialize PR_LABELS
           PR_LABELS=""
+          MAX_TIME_DIFF=3600
 
-          # Try to extract PR number from commit message (e.g., "Merge pull request #123..." or "... (#123)")
-          # This regex looks for (#123) at the end of the subject line or in the body
+          # Try to extract PR number from commit message
+          # 1. Look for "(#123)" (common in squash merges)
           PR_NUMBER=$(echo "$COMMIT_MSG" | grep -oP '\(#\K\d+(?=\))' | head -n 1)
+          
+          # 2. If not found, look for "Merge pull request #123" (standard merge commits)
+          if [ -z "$PR_NUMBER" ]; then
+            PR_NUMBER=$(echo "$COMMIT_MSG" | grep -oP 'Merge pull request #\K\d+' | head -n 1)
+          fi
           
           if [ -n "$PR_NUMBER" ]; then
             echo "Found PR number in commit message: #$PR_NUMBER"
@@ -54,23 +60,27 @@ jobs:
               if [ -n "$PR_MERGED_AT" ] && [ "$PR_MERGED_AT" != "null" ]; then
                 # Get commit timestamp in seconds
                 COMMIT_TS=$(git show -s --format=%ct HEAD)
+                
                 # Get PR merged timestamp in seconds (using date -d which works on ubuntu-latest)
-                PR_TS=$(date -d "$PR_MERGED_AT" +%s)
-                
-                # Calculate absolute difference
-                DIFF=$((COMMIT_TS - PR_TS))
-                if [ $DIFF -lt 0 ]; then DIFF=$(( -1 * DIFF )); fi
-                
-                echo "PR Merged At: $PR_MERGED_AT ($PR_TS)"
-                echo "Commit Time: $(date -d @$COMMIT_TS) ($COMMIT_TS)"
-                echo "Time difference: ${DIFF}s"
-                
-                # If difference is less than 1 hour (3600 seconds), accept the PR
-                if [ $DIFF -lt 3600 ]; then
-                   PR_LABELS=$(echo "$PR_DATA" | jq -r '.labels[]?.name')
+                # Validate that date parsing succeeds before doing arithmetic
+                if PR_TS=$(date -d "$PR_MERGED_AT" +%s 2>/dev/null) && [ -n "$PR_TS" ]; then
+                    # Calculate absolute difference
+                    DIFF=$((COMMIT_TS - PR_TS))
+                    if [ $DIFF -lt 0 ]; then DIFF=$(( -1 * DIFF )); fi
+                    
+                    echo "PR Merged At: $PR_MERGED_AT ($PR_TS)"
+                    echo "Commit Time: $(date -d @$COMMIT_TS) ($COMMIT_TS)"
+                    echo "Time difference: ${DIFF}s (Threshold: ${MAX_TIME_DIFF}s)"
+                    
+                    # If difference is less than threshold, accept the PR
+                    if [ $DIFF -lt $MAX_TIME_DIFF ]; then
+                       PR_LABELS=$(echo "$PR_DATA" | jq -r '.labels[]?.name')
+                    else
+                       echo "Time difference too large (> ${MAX_TIME_DIFF}s), ignoring PR #$PR_NUMBER (likely a false positive reference)"
+                       PR_LABELS=""
+                    fi
                 else
-                   echo "Time difference too large (>1h), ignoring PR #$PR_NUMBER (likely a false positive reference)"
-                   PR_LABELS=""
+                    echo "Failed to parse PR timestamp: $PR_MERGED_AT"
                 fi
               else
                  echo "PR #$PR_NUMBER has no mergedAt timestamp (might be open or closed without merge)"
