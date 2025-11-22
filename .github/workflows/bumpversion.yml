@@ -30,7 +30,29 @@ jobs:
 
       - name: Determine Bump Part
         id: bump_part
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Check PR labels first (priority: labels > commit messages)
+          # We search for the PR associated with the current commit
+          # The safe navigation operator (.?) ensures we don't fail if no PR is found
+          PR_LABELS=$(gh pr list --search "${{ github.sha }}" --state merged --json labels --jq '.[0]?.labels[]?.name')
+          echo "PR Labels found: $PR_LABELS"
+
+          if echo "$PR_LABELS" | grep -q "bumpversion=major"; then
+            echo "part=major" >> $GITHUB_OUTPUT
+            echo "Detected label bumpversion=major"
+            exit 0
+          elif echo "$PR_LABELS" | grep -q "bumpversion=minor"; then
+            echo "part=minor" >> $GITHUB_OUTPUT
+            echo "Detected label bumpversion=minor"
+            exit 0
+          elif echo "$PR_LABELS" | grep -q "bumpversion=patch"; then
+            echo "part=patch" >> $GITHUB_OUTPUT
+            echo "Detected label bumpversion=patch"
+            exit 0
+          fi
+
           # Dump commits to a file to search through all messages
           echo '${{ toJson(github.event.commits) }}' > commits.json
           
