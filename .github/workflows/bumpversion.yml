@@ -32,6 +32,7 @@ jobs:
         id: bump_part
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMITS_JSON: ${{ toJson(github.event.commits) }}
         run: |
           COMMIT_MSG=$(git log -1 --pretty=%B)
           echo "Commit message: $COMMIT_MSG"
@@ -113,7 +114,9 @@ jobs:
           fi
 
           # Dump commits to a file to search through all messages
-          echo '${{ toJson(github.event.commits) }}' > commits.json
+          # We use an environment variable and printf to avoid shell injection issues
+          # with special characters in commit messages (e.g. single quotes)
+          printf "%s" "$COMMITS_JSON" > commits.json
           
           # Extract messages using jq (installed on ubuntu-latest)
           # Check for tags in priority order: major > minor > patch
