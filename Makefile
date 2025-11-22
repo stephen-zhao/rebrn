@@ -14,9 +14,10 @@ install-uv:
 	@echo "Installing uv if not already available (local/dev helper only)..."
 	@command -v uv >/dev/null 2>&1 || { \
 		echo "Downloading uv installer from $(UV_INSTALL_URL)"; \
-		curl -LsSf "$(UV_INSTALL_URL)" -o /tmp/uv-install.sh; \
-		sh /tmp/uv-install.sh; \
-		rm -f /tmp/uv-install.sh; \
+		tmpfile=$$(mktemp); \
+		curl -LsSf "$(UV_INSTALL_URL)" -o "$$tmpfile"; \
+		sh "$$tmpfile"; \
+		rm -f "$$tmpfile"; \
 	}
 
 test:
