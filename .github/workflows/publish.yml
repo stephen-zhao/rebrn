@@ -4,11 +4,22 @@ on:
   push:
     tags:
       - "v*"
+  workflow_run:
+    workflows: ["Bump Version"]
+    types:
+      - completed
 
 jobs:
   pypi-publish:
     name: Upload release to PyPI
     runs-on: ubuntu-latest
+    if: >-
+      ${{ 
+        github.event_name == 'push' || 
+        (github.event_name == 'workflow_run' && 
+         github.event.workflow_run.conclusion == 'success' && 
+         !startsWith(github.event.workflow_run.head_commit.message, 'Bump version:'))
+      }}
     environment: 
       name: pypi
       url: https://pypi.org/p/zhaostephen-rebrn
