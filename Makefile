@@ -36,4 +36,4 @@ clean:
 	rm -rf ./build ./*.egg-info ./dist
 
 bump-version:
-	uv run bump-my-version bump $(PART)
+	uv run --frozen bump-my-version bump $(PART)
