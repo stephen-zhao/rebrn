@@ -33,10 +33,69 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Check PR labels first (priority: labels > commit messages)
-          # We search for the PR associated with the current commit
-          # The safe navigation operator (.?) ensures we don't fail if no PR is found
-          PR_LABELS=$(gh pr list --search "${{ github.sha }}" --state merged --json labels --jq '.[0]?.labels[]?.name')
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+
+          # Initialize PR_LABELS
+          PR_LABELS=""
+          MAX_TIME_DIFF=3600
+
+          # Try to extract PR number from commit message
+          # 1. Look for "(#123)" (common in squash merges)
+          PR_NUMBER=$(echo "$COMMIT_MSG" | grep -oP '\(#\K\d+(?=\))' | head -n 1)
+          
+          # 2. If not found, look for "Merge pull request #123" (standard merge commits)
+          if [ -z "$PR_NUMBER" ]; then
+            PR_NUMBER=$(echo "$COMMIT_MSG" | grep -oP 'Merge pull request #\K\d+' | head -n 1)
+          fi
+          
+          if [ -n "$PR_NUMBER" ]; then
+            echo "Found PR number in commit message: #$PR_NUMBER"
+            # Fetch labels and mergedAt timestamp
+            PR_DATA=$(gh pr view "$PR_NUMBER" --json labels,mergedAt 2>/dev/null || true)
+            
+            if [ -n "$PR_DATA" ]; then
+              PR_MERGED_AT=$(echo "$PR_DATA" | jq -r '.mergedAt')
+              
+              if [ -n "$PR_MERGED_AT" ] && [ "$PR_MERGED_AT" != "null" ]; then
+                # Get commit timestamp in seconds
+                COMMIT_TS=$(git show -s --format=%ct HEAD)
+                
+                # Get PR merged timestamp in seconds (using date -d which works on ubuntu-latest)
+                # Validate that date parsing succeeds before doing arithmetic
+                if PR_TS=$(date -d "$PR_MERGED_AT" +%s 2>/dev/null) && [ -n "$PR_TS" ]; then
+                    # Calculate absolute difference
+                    DIFF=$((COMMIT_TS - PR_TS))
+                    if [ $DIFF -lt 0 ]; then DIFF=$(( -1 * DIFF )); fi
+                    
+                    echo "PR Merged At: $PR_MERGED_AT ($PR_TS)"
+                    echo "Commit Time: $(date -d @$COMMIT_TS) ($COMMIT_TS)"
+                    echo "Time difference: ${DIFF}s (Threshold: ${MAX_TIME_DIFF}s)"
+                    
+                    # If difference is less than threshold, accept the PR
+                    if [ $DIFF -lt $MAX_TIME_DIFF ]; then
+                       PR_LABELS=$(echo "$PR_DATA" | jq -r '.labels[]?.name')
+                    else
+                       echo "Time difference too large (> ${MAX_TIME_DIFF}s), ignoring PR #$PR_NUMBER (likely a false positive reference)"
+                       PR_LABELS=""
+                    fi
+                else
+                    echo "Failed to parse PR timestamp: $PR_MERGED_AT"
+                fi
+              else
+                 echo "PR #$PR_NUMBER has no mergedAt timestamp (might be open or closed without merge)"
+              fi
+            else
+              echo "Could not fetch data for PR #$PR_NUMBER (might be an issue or invalid number)"
+            fi
+          fi
+
+          # Fallback: Search by SHA if no PR number found or verification failed
+          if [ -z "$PR_LABELS" ]; then
+            echo "No valid PR labels found via number, searching by SHA..."
+            PR_LABELS=$(gh pr list --search "${{ github.sha }}" --state merged --json labels --jq '.[0]?.labels[]?.name')
+          fi
+          
           echo "PR Labels found: $PR_LABELS"
 
           if echo "$PR_LABELS" | grep -q "bumpversion=major"; then
