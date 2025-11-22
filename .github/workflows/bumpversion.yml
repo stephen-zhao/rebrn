@@ -31,16 +31,18 @@ jobs:
       - name: Determine Bump Part
         id: bump_part
         run: |
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-          echo "Commit message: $COMMIT_MSG"
+          # Dump commits to a file to search through all messages
+          echo '${{ toJson(github.event.commits) }}' > commits.json
           
-          if echo "$COMMIT_MSG" | grep -q "#major"; then
+          # Extract messages using jq (installed on ubuntu-latest)
+          # Check for tags in priority order: major > minor > patch
+          if jq -r '.[].message' commits.json | grep -q "#major"; then
             echo "part=major" >> $GITHUB_OUTPUT
             echo "Detected #major"
-          elif echo "$COMMIT_MSG" | grep -q "#minor"; then
+          elif jq -r '.[].message' commits.json | grep -q "#minor"; then
             echo "part=minor" >> $GITHUB_OUTPUT
             echo "Detected #minor"
-          elif echo "$COMMIT_MSG" | grep -q "#patch"; then
+          elif jq -r '.[].message' commits.json | grep -q "#patch"; then
             echo "part=patch" >> $GITHUB_OUTPUT
             echo "Detected #patch"
           else
@@ -50,5 +52,13 @@ jobs:
 
       - name: Bump Version
         run: |
+          # Checkout main branch to ensure we are on the branch we want to push to
+          git checkout main
+          git pull origin main
+          
+          # Bump version using make target
+          # bump-my-version is configured in pyproject.toml to commit and tag automatically
           make bump-version PART=${{ steps.bump_part.outputs.part }}
+          
+          # Push changes and tags
           git push origin main --tags
