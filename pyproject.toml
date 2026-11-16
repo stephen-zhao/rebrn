@@ -125,10 +125,26 @@ warn_unused_configs = true
 no_implicit_optional = true
 
 [tool.pytest.ini_options]
-addopts = "--cov=zhaostephen.rebrn --cov-report=term-missing"
-testpaths = ["tests"]
+testpaths = ["test"]
 pythonpath = ["src"]
 
+# Coverage is opt-in per run (`make test-coverage`, or `pytest --cov`) so a plain
+# `pytest` stays fast. CI runs it with the same flags.
 [tool.coverage.run]
+source = ["zhaostephen.rebrn"]
 branch = true
-omit = ["tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
